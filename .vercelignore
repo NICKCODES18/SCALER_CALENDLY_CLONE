@@ -1,0 +1,12 @@
+node_modules
+FRONTEND/node_modules
+BACKEND/node_modules
+FRONTEND/dist
+BACKEND/dist
+.git
+.env
+.vercel
+package-lock.json
+build
+.next
+.cache
