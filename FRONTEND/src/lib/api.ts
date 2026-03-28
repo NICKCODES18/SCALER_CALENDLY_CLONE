@@ -2,8 +2,8 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'calendly_token';
 
-const rawBase = import.meta.env.VITE_API_URL ?? '/api';
-const baseURL = typeof rawBase === 'string' ? rawBase.replace(/\/$/, '') : '';
+// All call sites already include '/api/...' in the path, so baseURL stays at root.
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 export const api = axios.create({
   baseURL,

@@ -2,7 +2,20 @@
   "name": "scaler-calendly-clone-root",
   "private": true,
   "scripts": {
-    "build": "cd FRONTEND && rm -rf node_modules && npm install && npm run build && cd .. && rm -rf public && mv FRONTEND/dist public",
-    "install-backend": "cd BACKEND && npm install"
+    "build": "cd FRONTEND && npm install && npm run build && cd .. && rm -rf public && mv FRONTEND/dist public",
+    "postinstall": "prisma generate --schema=BACKEND/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@prisma/extension-accelerate": "^1.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "google-auth-library": "^10.6.2",
+    "jsonwebtoken": "^9.0.3",
+    "luxon": "^3.7.2",
+    "prisma": "^5.22.0"
   }
 }
