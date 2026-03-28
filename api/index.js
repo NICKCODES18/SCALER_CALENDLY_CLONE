@@ -1,4 +1,5 @@
-require("dotenv").config({ path: require("path").join(__dirname, "../BACKEND/.env") });
+// Env vars are injected by Vercel dashboard in production.
+// For local dev, server.js loads dotenv instead.
 const app = require("../BACKEND/src/app");
 
 module.exports = (req, res) => {
