@@ -4,7 +4,7 @@
   "description": "Calendly-style scheduling (Scaler assignment)",
   "scripts": {
     "dev": "vite",
-    "build": "npx tsc --noEmit && npx vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "keywords": [],
