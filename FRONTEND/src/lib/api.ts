@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'calendly_token';
 
-const rawBase = import.meta.env.VITE_API_URL ?? '';
+const rawBase = import.meta.env.VITE_API_URL ?? '/api';
 const baseURL = typeof rawBase === 'string' ? rawBase.replace(/\/$/, '') : '';
 
 export const api = axios.create({

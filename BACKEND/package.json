@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "seed": "node src/seed.js",
-    "migrate": "prisma migrate deploy"
+    "migrate": "prisma migrate deploy",
+    "postinstall": "prisma generate"
   },
   "author": "Nikunj",
   "license": "ISC",
