@@ -2,7 +2,7 @@
   "name": "calendly-clone-root",
   "private": true,
   "scripts": {
-    "build": "cd FRONTEND && npm install && npm run build",
+    "build": "cd FRONTEND && rm -rf node_modules && npm install && npm run build",
     "install-backend": "cd BACKEND && npm install"
   }
 }
