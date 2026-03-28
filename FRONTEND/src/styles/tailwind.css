@@ -1,0 +1,16 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+/**
+ * Breakpoints (match product spec):
+ * - mobile: max-width 480px
+ * - tablet: 481px – 1024px
+ * - desktop: min-width 1025px
+ */
+@custom-variant mobile (@media (max-width: 480px));
+@custom-variant tablet (@media (min-width: 481px) and (max-width: 1024px));
+@custom-variant desktop (@media (min-width: 1025px));
+@custom-variant tablet-up (@media (min-width: 481px));
+@custom-variant until-desktop (@media (max-width: 1024px));

@@ -1,0 +1,250 @@
+# Calendly Clone — Full Code Review Report
+
+> Reviewed by: Senior Fullstack Engineer  
+> Stack: Node.js · Express · Prisma · PostgreSQL · Vite · React · TypeScript · TanStack Query
+
+---
+
+## 1. ✅ Working Features
+
+| Area | Feature |
+|------|---------|
+| **Event Types** | Create / Edit / Delete via REST API + UI modal |
+| **Event Types** | Auto-slug generation from title (both frontend: regex-cleaned, backend: space→hyphen) |
+| **Event Types** | Unique slug enforced at DB level (`@unique`) and backend check-before-write |
+| **Event Types** | Public booking URL generated correctly (`/book/:slug`) |
+| **Event Types** | Default Mon–Fri 9–5 availability auto-seeded on creation (transaction) |
+| **Availability** | Per-event-type day/time slots — bulk replace strategy (delete + createMany) |
+| **Availability** | Multiple time slots per day (Add/Remove) |
+| **Availability** | Timezone UI selector present |
+| **Public Booking** | Calendar month view renders correctly (grid, prev/next nav) |
+| **Public Booking** | Unavailable days grayed out; past dates disabled |
+| **Public Booking** | Slots fetched live from backend on date select |
+| **Public Booking** | Slot generation ([generateSlots](file:///e:/SCALER/BACKEND/src/utils/slotGenerator.js#1-24)) is correct — no off-by-one |
+| **Public Booking** | Double-booking prevented at backend (`findFirst` + 409) |
+| **Public Booking** | Booking form collects name + email |
+| **Public Booking** | Confirmation screen shows event name, date, time, duration |
+| **Meetings** | Upcoming / Past tabs with correct counts |
+| **Meetings** | Cancel meeting (soft-delete: sets `status = "cancelled"`) |
+| **Meetings** | [cancelMeeting](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#234-238) immediately refreshes meetings list |
+| **Backend** | RESTful routes (GET/POST/PATCH/DELETE), properly namespaced |
+| **Backend** | Auth middleware: JWT via cookie OR Bearer header; [defaultUserOrAuth](file:///e:/SCALER/BACKEND/src/middleware/auth.middleware.js#35-46) fallback for dev |
+| **Backend** | Ownership check on availability, event type, and cancel booking |
+| **Backend** | Input validation on all create endpoints |
+| **Database** | 4 normalized tables: [User](file:///e:/SCALER/BACKEND/src/controllers/auth.controller.js#34-37), [EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13), [Availability](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#19-28), [Booking](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249) |
+| **Database** | FK constraints + cascade delete ([EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13) → [User](file:///e:/SCALER/BACKEND/src/controllers/auth.controller.js#34-37)) |
+| **Database** | `slug` has `@unique` index |
+| **UI/UX** | Dashboard closely mirrors Calendly (blue accent `#006BFF`, tabs, search, copy-link) |
+| **UI/UX** | Smooth booking flow: calendar → time → form → confirmation |
+| **Code Quality** | Clean folder structure: `controllers/`, `routes/`, `middleware/`, `utils/` |
+| **Code Quality** | TanStack Query for event types (cache + refetch) |
+| **Code Quality** | [mapAvailability()](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#40-67) utility reused in both [AppContext](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#68-87) and [BookingPage](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249) |
+
+---
+
+## 2. ❌ Issues Found
+
+### 🔴 Critical Bugs
+
+#### BUG-1 — MeetingsPage shows cancelled bookings in "Upcoming" tab
+**File:** [AppContext.tsx](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx) L155, [MeetingsPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx) L13-22
+
+`refreshMeetings()` fetches both `/api/booking/upcoming` and `/api/booking/past` and merges them into one flat array. Then [MeetingsPage](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx#6-113) re-splits them client-side by date only — it **ignores `status`**. So a cancelled meeting with a future date will appear in the "Upcoming" tab.
+
+The backend `/api/booking/upcoming` already filters `status: "scheduled"` correctly, but the client discards that distinction by merging both arrays.
+
+```
+❌ meetings = [...upcoming, ...past]  // status info lost
+❌ MeetingsPage splits by date only — cancelled meetings with future dates show in Upcoming
+```
+
+#### BUG-2 — Slug not sent on Edit; backend silently passes `undefined` slug
+**File:** [AppContext.tsx](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx) L185, [eventType.controller.js](file:///e:/SCALER/BACKEND/src/controllers/eventType.controller.js) L97
+
+When editing an event type, the frontend sends `{ title, duration }` but NOT `slug`. The backend update handler computes `slug` from `title` — but only if `title` is provided. When a user edits only duration (no title change), `slug` becomes `undefined` and the Prisma [update](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#184-188) sets `slug: undefined`, which Prisma ignores — this is safe but inconsistent. However if a user changes the title, the slug auto-regenerates silently without showing the new slug to the user.
+
+#### BUG-3 — [cancelBooking](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js#71-92) endpoint uses DELETE but backend does soft-delete only
+**File:** [booking.route.js](file:///e:/SCALER/BACKEND/src/routes/booking.route.js) L18, [booking.controller.js](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js) L82-85
+
+The route is `router.delete("/:id", ...)` but the handler does `prisma.booking.update({ data: { status: "cancelled" } })`. This is a semantic mismatch — a `DELETE` HTTP method should delete the resource. Additionally, `AppContext.cancelMeeting` calls `api.delete()` — however the [Booking](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249) DELETE route is protected by [defaultUserOrAuth](file:///e:/SCALER/BACKEND/src/middleware/auth.middleware.js#35-46), while `POST /api/booking` (create) has **no auth guard at all**, meaning anyone can book on someone else's event type.
+
+#### BUG-4 — `new Date(date)` timezone offset bug in [getSlots](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#239-245) and [MeetingsPage](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx#6-113)
+**File:** [booking.controller.js](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js) L126, [MeetingsPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx) L15
+
+```js
+const day = new Date(date).getDay();  // date = "2025-04-01" (ISO string)
+```
+`new Date("2025-04-01")` is parsed as **UTC midnight**, so in negative UTC-offset timezones (e.g. `America/New_York`), `.getDay()` returns the **previous day** (March 31 = Sunday instead of Tuesday April 1). This breaks slot availability — the wrong day's availability is queried.
+
+Same issue in [MeetingsPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx) L15: `new Date(meeting.date)` shifts one day back in UTC- timezones.
+
+---
+
+### 🟡 Non-Critical Issues
+
+#### ISSUE-5 — `timezone` is stored only in React state, never sent to backend
+**File:** [AppContext.tsx](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx) L105, [availability.controller.js](file:///e:/SCALER/BACKEND/src/controllers/availability.controller.js)
+
+The selected timezone is never persisted. If the user refreshes, the timezone resets to `'America/New_York'`. More importantly, the backend generates slots in plain `HH:MM` strings with no timezone conversion — all times are treated as whatever timezone the server runs in.
+
+#### ISSUE-6 — Slug prefix in modal shows `schedulr.com/` (hardcoded), but actual URL is `localhost:5173/book/`
+**File:** [EventFormModal.tsx](file:///e:/SCALER/FRONTEND/src/app/components/EventFormModal.tsx) L95
+
+This is a cosmetic mismatch that will confuse users in production.
+
+#### ISSUE-7 — [handleBookingSubmit](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#109-137) in [BookingPage](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249) uses `alert()` on error
+**File:** [BookingPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx) L134
+
+The [Dashboard.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/Dashboard.tsx) and [MeetingsPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx) use `toast.success/error` (Sonner). [BookingPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx) uses `alert()` — inconsistent UX.
+
+#### ISSUE-8 — [Availability](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#19-28) missing `onDelete: Cascade` for `eventTypeId` FK
+**File:** [schema.prisma](file:///e:/SCALER/BACKEND/prisma/schema.prisma) L38
+
+```diff
+- eventType    EventType @relation(fields: [eventTypeId], references: [id])
++ eventType    EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+```
+Same for [Booking](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249). If an [EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13) is deleted, Prisma cascades from [User](file:///e:/SCALER/BACKEND/src/controllers/auth.controller.js#34-37) → [EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13) but not from [EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13) → [Availability](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#19-28) / [Booking](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249), which will throw a FK constraint error at runtime.
+
+> ⚠️ **This will cause a 500 error when deleting an event type that has bookings.**
+
+#### ISSUE-9 — [availability.route.js](file:///e:/SCALER/BACKEND/src/routes/availability.route.js) has a dead `PUT /:id` route
+**File:** [availability.route.js](file:///e:/SCALER/BACKEND/src/routes/availability.route.js) L8
+
+`router.put("/:id", defaultUserOrAuth, setAvailability)` — the [setAvailability](file:///e:/SCALER/BACKEND/src/controllers/availability.controller.js#14-64) handler switches on `Array.isArray(slots) && eventTypeId` from `req.body`, not from `req.params.id`. The `:id` param is never read. This route is dead code.
+
+#### ISSUE-10 — [MeetingsPage](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx#6-113) splits meetings client-side but backend already splits them
+`AppContext.refreshMeetings` hits both `/upcoming` and `/past` and merges. The meeting tab then re-splits by date. This is redundant work and introduces the BUG-1 desync.
+
+---
+
+## 3. ⚠️ Improvements
+
+| Area | Suggestion |
+|------|-----------|
+| **Timezone** | Store user's timezone in DB (`User.timezone`). Use `date-fns-tz` on the backend to convert slot times before returning |
+| **Booking Confirmation** | Send a real confirmation email (nodemailer / Resend) instead of the fake "A calendar invitation has been sent…" message |
+| **Slug Validation** | Add regex validation on backend: only allow `[a-z0-9-]`; the frontend modal has a hint but no enforcement |
+| **Loading States** | Add skeleton loaders to [MeetingsPage](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx#6-113) and [AvailabilityPage](file:///e:/SCALER/FRONTEND/src/app/pages/AvailabilityPage.tsx#33-227) (only Dashboard shows `eventTypesLoading`) |
+| **Pagination** | Add limit/offset to [getUpcoming](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js#36-52) / [getPast](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js#53-70) — no pagination means all bookings load in one request |
+| **Input sanitization** | `name` and `email` in booking form: add trim + basic email regex validation on both frontend and backend |
+| **Error handling** | Replace all `alert()` calls ([AvailabilityPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/AvailabilityPage.tsx) L87, [BookingPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx) L134) with toast notifications |
+| **Public booking auth** | `POST /api/booking` should be rate-limited (e.g. express-rate-limit) to prevent spam bookings |
+| **DB indexes** | Add composite index on [Booking(date, eventTypeId, status)](file:///e:/SCALER/FRONTEND/src/app/pages/BookingPage.tsx#18-249) for the double-booking check query performance |
+| **`description` field** | [EventType](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#6-13) model has no `description` column — the frontend sends/stores it, but it's never persisted. Either add the column or remove the field from the form |
+
+---
+
+## 4. 🔧 Fix Suggestions
+
+### Fix BUG-1 — Preserve status in meetings; filter correctly in MeetingsPage
+
+**[AppContext.tsx](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx)** — Add `status` to [Meeting](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#29-39) interface and map it:
+```ts
+// In Meeting interface
+status: 'scheduled' | 'cancelled';
+
+// In refreshMeetings mapping
+status: String(item.status) as 'scheduled' | 'cancelled',
+```
+
+**[MeetingsPage.tsx](file:///e:/SCALER/FRONTEND/src/app/pages/MeetingsPage.tsx)** — Filter cancelled out of upcoming:
+```ts
+const upcoming = meetings.filter(m => {
+  const d = new Date(m.date + 'T00:00:00'); // Fix BUG-4 too
+  d.setHours(0, 0, 0, 0);
+  return d >= today && m.status === 'scheduled';  // ← add status check
+});
+```
+
+---
+
+### Fix BUG-4 — UTC date parsing offset
+
+In **[booking.controller.js](file:///e:/SCALER/BACKEND/src/controllers/booking.controller.js) L126**, append time to force local parsing:
+```js
+// ❌ Wrong — parsed as UTC midnight, shifts day in UTC- timezones
+const day = new Date(date).getDay();
+
+// ✅ Correct — force local date parsing
+const day = new Date(date + 'T00:00:00').getDay();
+```
+
+Apply same fix everywhere `new Date(dateString)` is used with a `YYYY-MM-DD` string.
+
+---
+
+### Fix ISSUE-8 — Add cascade deletes to schema
+
+```prisma
+model Availability {
+  // ...
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  // ...
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+}
+```
+Then run: `npx prisma migrate dev --name add_cascade_deletes`
+
+---
+
+### Fix ISSUE-6 — Dynamic slug prefix in modal
+
+**[EventFormModal.tsx](file:///e:/SCALER/FRONTEND/src/app/components/EventFormModal.tsx) L95:**
+```tsx
+// ❌ Hardcoded
+<span className="...">schedulr.com/</span>
+
+// ✅ Use actual origin + path
+<span className="...">{window.location.origin}/book/</span>
+```
+
+---
+
+### Fix ISSUE-5 — Persist timezone in DB
+
+Add to [schema.prisma](file:///e:/SCALER/BACKEND/prisma/schema.prisma):
+```prisma
+model User {
+  // existing fields...
+  timezone  String @default("UTC")
+}
+```
+Then save the timezone on the [updateAvailability](file:///e:/SCALER/FRONTEND/src/app/context/AppContext.tsx#194-218) call and read it back on `/api/me`.
+
+---
+
+### Fix BUG-3 — Add auth guard to `POST /api/booking`
+This endpoint should at minimum be rate-limited. If you want to keep it public (for invitees without accounts), add express-rate-limit:
+```js
+// booking.route.js
+const rateLimit = require('express-rate-limit');
+const bookingLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+router.post('/', bookingLimiter, createBooking);
+```
+
+---
+
+## 5. 🚀 Final Verdict
+
+### **NO — Not submission-ready yet (7/10)**
+
+The core flows work and the UI is polished. However, **2 critical bugs** block correctness:
+
+| # | Blocker | Severity |
+|---|---------|----------|
+| BUG-1 | Cancelled meetings appear in Upcoming tab | 🔴 |
+| BUG-3/8 | Deleting an event type with bookings crashes with FK error | 🔴 |
+| BUG-4 | Wrong day-of-week in UTC-offset timezones breaks slot availability | 🔴 |
+
+Fix those 3 bugs (estimated ~30 min of work), and the project becomes **submission-ready**. The architecture, API design, and UI quality are genuinely strong.
+
+**Positive highlights:**
+- Clean MVC backend with proper auth middleware
+- Booking double-prevention at DB level
+- Calendly-accurate UI with correct color system
+- TanStack Query integration for reactive event types
+- Prisma transactions for atomic event-type creation with availability seeding
