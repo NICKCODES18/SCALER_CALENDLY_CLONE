@@ -1,5 +1,11 @@
 import { Link } from 'react-router';
-import { ArrowRight, CalendarClock } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+
+const COMPANIES = [
+  'DoorDash', 'Lyft', 'Compass', "L'Oréal", 'Zendesk', 'Dropbox',
+  'Salesforce', 'HubSpot', 'Slack', 'GitHub', 'Stripe', 'Figma',
+  'Notion', 'Airbnb', 'Netflix', 'Shopify', 'Atlassian', 'Twilio',
+];
 
 export function LandingPage() {
   return (
@@ -19,10 +25,14 @@ export function LandingPage() {
 
       <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-col items-center text-center">
         <div
-          className="animate-calendly-fade-up mb-8 inline-flex size-[4.5rem] items-center justify-center rounded-2xl bg-white/80 shadow-[0_8px_32px_-8px_rgba(0,107,255,0.2)] ring-1 ring-slate-200/80 backdrop-blur-sm tablet:size-20"
+          className="animate-calendly-fade-up mb-8"
           style={{ animationDelay: '0ms' }}
         >
-          <CalendarClock className="size-10 text-[#006bff] tablet:size-11" strokeWidth={1.35} />
+          <img
+            src="https://res.cloudinary.com/disxidyvq/image/upload/v1774760635/cud1mkihhuav6mneia5c.png"
+            alt="Logo"
+            className="h-16 w-auto object-contain tablet:h-20"
+          />
         </div>
 
         <h1
@@ -62,9 +72,58 @@ export function LandingPage() {
         </div>
       </div>
 
-      <footer className="animate-calendly-fade-up relative z-10 mt-auto pt-16 text-center text-xs text-slate-400" style={{ animationDelay: '420ms' }}>
-        Calendly-style scheduling · Assignment project
-      </footer>
+      {/* ── Marquee belt ── */}
+      <div
+        className="animate-calendly-fade-up relative z-10 mt-16 w-full max-w-4xl"
+        style={{ animationDelay: '480ms' }}
+      >
+        <p className="mb-5 text-center text-xs font-medium tracking-widest text-slate-400 uppercase">
+          Trusted by leading teams worldwide
+        </p>
+
+        {/* Fade masks on left & right */}
+        <div className="relative overflow-hidden">
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
+
+          {/* Track — render list twice for seamless loop */}
+          <div className="flex animate-marquee whitespace-nowrap">
+            {[...COMPANIES, ...COMPANIES].map((name, i) => (
+              <span
+                key={i}
+                className="mx-8 inline-block font-['Georgia',serif] text-lg font-semibold tracking-tight text-slate-400 transition-colors duration-200 hover:text-[#006bff]"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Know the builder + footer bar ── */}
+      <div
+        className="animate-calendly-fade-up relative z-10 mt-10 flex w-full flex-col items-center gap-4"
+        style={{ animationDelay: '560ms' }}
+      >
+        <a
+          href="https://portfolio.nikunjjain.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative inline-flex items-center gap-2.5 overflow-hidden rounded-full border border-[#006bff]/20 bg-gradient-to-r from-[#006bff]/5 via-white to-[#6366f1]/5 px-6 py-2.5 text-sm font-semibold text-[#006bff] shadow-sm shadow-[#006bff]/10 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#006bff]/40 hover:shadow-md hover:shadow-[#006bff]/20"
+        >
+          {/* shimmer on hover */}
+          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+          <span className="relative size-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.5)]" />
+          <span className="relative">Know the builder</span>
+          <svg className="relative size-3.5 opacity-50 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M1 7h12M8 2l5 5-5 5" />
+          </svg>
+        </a>
+
+        <p className="text-[11px] text-slate-400">
+          Calendly-style scheduling · Assignment project
+        </p>
+      </div>
     </div>
   );
 }

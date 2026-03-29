@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { CalendarClock, ChevronDown, HelpCircle, Link2, MoreVertical, Search, Share2, Trash2 } from 'lucide-react';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import { CalendarClock, ChevronDown, HelpCircle, Link2, MoreVertical, Search, Share2, Trash2, X, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useApp } from '../context/AppContext';
 import { EventFormModal } from '../components/EventFormModal';
@@ -50,6 +50,18 @@ export function Dashboard() {
   const [editingEvent, setEditingEvent] = useState<EventType | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [singleUseLinks, setSingleUseLinks] = useState<SingleUseLink[]>(loadLinks);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const helpDialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = helpDialogRef.current;
+    if (!dialog) return;
+    if (helpOpen) {
+      dialog.showModal();
+    } else {
+      dialog.close();
+    }
+  }, [helpOpen]);
 
   // Persist single-use links to localStorage whenever they change
   useEffect(() => {
@@ -157,7 +169,9 @@ export function Dashboard() {
             </h1>
             <button
               type="button"
-              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-[#6B6B6B] hover:bg-gray-100 hover:text-[#0A0A0A]"
+              id="help-btn"
+              onClick={() => setHelpOpen(true)}
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-[#6B6B6B] transition-colors hover:bg-gray-100 hover:text-[#0A0A0A]"
               aria-label="Help"
             >
               <HelpCircle className="size-5" strokeWidth={1.5} />
@@ -197,7 +211,10 @@ export function Dashboard() {
                 : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
             }`}
           >
-            Meeting polls
+            <span className="flex items-center gap-1.5">
+              Meeting polls
+              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Soon</span>
+            </span>
           </button>
         </div>
       </header>
@@ -228,8 +245,12 @@ export function Dashboard() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuItem onClick={handleCreateEventType}>Event type</DropdownMenuItem>
-                <DropdownMenuItem disabled>Single-use link</DropdownMenuItem>
-                <DropdownMenuItem disabled>Meeting poll</DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  <span className="flex items-center gap-2">Single-use link <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Soon</span></span>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled>
+                  <span className="flex items-center gap-2">Meeting poll <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Soon</span></span>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -433,6 +454,62 @@ export function Dashboard() {
           }}
         />
       )}
+
+      {/* Help / About popup */}
+      <dialog
+        ref={helpDialogRef}
+        id="help-dialog"
+        onClick={(e) => { if (e.target === helpDialogRef.current) setHelpOpen(false); }}
+        className="m-auto w-full max-w-md rounded-2xl border-0 bg-white p-0 shadow-2xl shadow-slate-900/20 backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm open:flex open:flex-col"
+      >
+        {/* Gradient header */}
+        <div className="relative flex items-center gap-3 rounded-t-2xl bg-gradient-to-br from-[#006bff] to-[#5b21b6] px-6 py-5">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/20">
+            <Info className="size-5 text-white" strokeWidth={1.75} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white/75">About this site</p>
+            <p className="text-base font-semibold text-white">Scheduling Tool</p>
+          </div>
+          <button
+            type="button"
+            id="help-dialog-close"
+            onClick={() => setHelpOpen(false)}
+            className="absolute right-4 top-4 inline-flex size-8 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/20 hover:text-white"
+            aria-label="Close"
+          >
+            <X className="size-4" strokeWidth={2} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex flex-col gap-4 px-6 py-6">
+          <p className="text-[15px] leading-relaxed text-[#3D3D3D]">
+            This is a <span className="font-semibold text-[#006bff]">demo website</span> built as a
+            Calendly-style scheduling tool assignment project for{' '}
+            <span className="font-semibold text-[#5b21b6]">Scaler</span>.
+          </p>
+          <p className="text-sm leading-relaxed text-[#6B6B6B]">
+            It showcases event-type management, availability settings, real-time booking pages, and
+            single-use shareable links — all backed by a live API.
+          </p>
+          <div className="rounded-xl border border-slate-200/80 bg-[#f8fafc] px-4 py-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9B9B9B]">Built with</p>
+            <p className="mt-1 text-sm font-medium text-[#3D3D3D]">React · Node.js · Prisma · PostgreSQL</p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end border-t border-slate-200/80 px-6 py-4">
+          <button
+            type="button"
+            onClick={() => setHelpOpen(false)}
+            className="h-10 rounded-xl bg-[#006bff] px-5 text-sm font-medium text-white transition-all hover:bg-[#0058e6]"
+          >
+            Got it
+          </button>
+        </div>
+      </dialog>
     </div>
   );
 }

@@ -205,9 +205,23 @@
   }
 }
 
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 @layer utilities {
   .animate-calendly-fade-up {
     animation: calendly-fade-up 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
+  }
+
+  .animate-marquee {
+    animation: marquee-scroll 28s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-marquee:hover {
+    animation-play-state: paused;
   }
 }

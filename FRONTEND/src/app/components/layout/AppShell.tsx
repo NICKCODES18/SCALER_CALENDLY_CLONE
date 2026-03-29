@@ -62,6 +62,9 @@ function SidebarNav({
               title="Coming soon"
             >
               {content}
+              <span className="ml-auto shrink-0 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                Soon
+              </span>
             </div>
           );
         }
@@ -102,10 +105,14 @@ export function AppShell() {
       >
         <div className="flex h-14 shrink-0 items-center border-b border-slate-200/80 px-5">
           <Link
-            to={SCHEDULING_PATH}
-            className="flex min-h-10 items-center gap-2 text-lg font-semibold tracking-tight text-slate-900 transition-opacity hover:opacity-80"
+            to="/"
+            className="flex min-h-10 items-center gap-2 transition-opacity hover:opacity-80"
           >
-            Calendly
+            <img
+              src="https://res.cloudinary.com/disxidyvq/image/upload/v1774759952/qb1trfwklrj3en6mnozj.png"
+              alt="Logo"
+              className="h-10 w-auto object-contain"
+            />
           </Link>
         </div>
         <SidebarNav pathname={path} />
@@ -127,17 +134,27 @@ export function AppShell() {
             className="w-[min(100vw-1rem,280px)] gap-0 border-slate-200/90 bg-white p-0 shadow-xl"
           >
             <SheetHeader className="border-b border-slate-200/80 px-4 py-3.5 text-left">
-              <SheetTitle className="text-base font-semibold text-slate-900">Calendly</SheetTitle>
+              <SheetTitle>
+                <img
+                  src="https://res.cloudinary.com/disxidyvq/image/upload/v1774759952/qb1trfwklrj3en6mnozj.png"
+                  alt="Logo"
+                  className="h-10 w-auto object-contain"
+                />
+              </SheetTitle>
             </SheetHeader>
             <SidebarNav pathname={path} onNavigate={() => setMobileNavOpen(false)} className="flex-none" />
           </SheetContent>
         </Sheet>
         <Link
-          to={SCHEDULING_PATH}
-          className="min-h-11 flex flex-1 items-center text-lg font-semibold tracking-tight text-slate-900"
+          to="/"
+          className="min-h-11 flex flex-1 items-center"
           onClick={() => setMobileNavOpen(false)}
         >
-          Calendly
+          <img
+            src="https://res.cloudinary.com/disxidyvq/image/upload/v1774759952/qb1trfwklrj3en6mnozj.png"
+            alt="Logo"
+            className="h-10 w-auto object-contain"
+          />
         </Link>
         <div className="shrink-0">
           <UserMenu />
@@ -145,8 +162,43 @@ export function AppShell() {
       </header>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col pt-14 until-desktop:pt-14 desktop:pt-0 desktop:pl-[240px]">
-        <header className="hidden h-14 min-h-14 shrink-0 items-center justify-end border-b border-slate-200/80 bg-white px-4 tablet:px-6 desktop:flex desktop:px-8">
-          <UserMenu />
+        <header className="hidden h-14 min-h-14 shrink-0 items-center justify-between border-b border-slate-200/80 bg-white desktop:flex">
+          {/* Full-width marquee fills gap between sidebar edge and Host menu */}
+          <div className="relative flex min-w-0 flex-1 overflow-hidden px-6">
+            {/* left & right fade masks */}
+            <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-gradient-to-r from-white to-transparent" />
+            <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-gradient-to-l from-white to-transparent" />
+
+            <div className="flex animate-marquee whitespace-nowrap" style={{ animationDuration: '22s' }}>
+              {(() => {
+                const phrases = [
+                  'Simplify your schedule', '·',
+                  "Meet smarter, not harder", '·',
+                  "The world's #1 scheduling platform", '·',
+                  'Eliminate the back-and-forth of finding meeting times', '·',
+                  'Professional scheduling, effortlessly', '·',
+                  'Your calendar, your rules', '·',
+                  'Book more, stress less', '·',
+                  'Never miss a meeting again', '·',
+                ];
+                return [...phrases, ...phrases].map((phrase, i) => (
+                  <span
+                    key={i}
+                    className={`mx-4 inline-block text-[13px] tracking-wide ${
+                      phrase === '·' ? 'text-slate-200' : 'font-medium italic text-slate-400'
+                    }`}
+                    style={{ fontFamily: "'Georgia', serif" }}
+                  >
+                    {phrase}
+                  </span>
+                ));
+              })()}
+            </div>
+          </div>
+
+          <div className="shrink-0 pr-8">
+            <UserMenu />
+          </div>
         </header>
         <div className="min-w-0 flex-1">
           <Outlet />
