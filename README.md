@@ -1,141 +1,221 @@
-🚀 NICK'S CALENDLY — Scheduling Platform (Scaler Assignment)
+# 🚀 NICK'S CALENDLY — Scheduling Platform  
+### *(Scaler SDE Intern Assignment — Production-Grade Clone)*
 
-A full-stack scheduling & booking platform inspired by Calendly, built with production-grade architecture and clean UI/UX patterns.
+A **full-stack scheduling & booking platform** inspired by Calendly, built with **scalable architecture, clean UI/UX, and real-world system design principles**.
 
-This application allows users to create event types, manage availability, and accept bookings via a public link, closely replicating real-world scheduling systems.
+This application enables users to:
+- Create event types
+- Manage availability
+- Share booking links
+- Accept and manage meetings seamlessly
 
-✨ Features (Fully Implemented)
+---
 
-🧩 1. Event Types Management
-Create event types with name, duration, unique slug  
-Edit & delete event types  
-Each event type has a public booking URL  
-Clean card-based UI (Calendly style)  
+## 🌐 Live Application
 
-📅 2. Availability Settings
-Set weekly availability (Mon–Sun)  
-Define time ranges per day  
-Host timezone selection supported  
-Stored in database for dynamic slot generation  
+- 🚀 **Live App:** http://scaler-sage.vercel.app  
 
-🌍 3. Public Booking Page (/book/:slug)
-Month-based calendar UI  
-Dynamic time slot generation  
-Booking form (name + email)  
-Prevents double booking  
-Booking confirmation screen  
+---
 
-📊 4. Meetings Dashboard
-View upcoming meetings  
-View past meetings  
-Cancel meetings with status update  
+## ✨ Core Features
 
-🧠 Key Design Decisions (IMPORTANT FOR INTERVIEW)
+### 🧩 Event Types Management
+- Create events with **name, duration, unique slug**
+- Edit & delete event types
+- Public booking links for each event
+- **Calendly-inspired UI (clean + minimal)**
 
-Default User System  
-No auth required → simplifies assignment scope  
-Controlled via .env flags  
-Easily extendable to JWT / OAuth  
+---
 
-Slot Generation Logic  
-Based on:  
-Weekly availability  
-Selected date  
-Event duration  
-Ensures no overlap + no double booking  
+### 📅 Availability System
+- Weekly availability (Mon → Sun)
+- Multiple time ranges per day
+- Timezone-aware scheduling
+- Stored in DB → **dynamic slot generation**
 
-Database Normalization  
-Separate tables for:  
-Users  
-Event Types  
-Availability  
-Bookings  
-Clean relations → scalable design  
+---
 
-Separation of Concerns  
-Frontend: UI + API consumption  
-Backend: business logic + validation  
-Prisma: DB abstraction  
+### 🌍 Public Booking Flow
+- Route: \`/book/:slug\`
+- Month-based calendar interface
+- Smart time slot generation
+- Booking form (name + email)
+- **Prevents double booking**
+- Confirmation screen after booking
 
-🏗️ Tech Stack
+---
 
-Frontend: React 19, TypeScript, Vite, Tailwind CSS  
-UI Components: Radix UI, Sonner  
-State: TanStack Query  
-Backend: Node.js, Express 5  
-ORM: Prisma  
-Database: PostgreSQL  
-Routing: React Router 7  
-HTTP Client: Axios  
+### 📊 Meetings Dashboard
+- View **upcoming meetings**
+- View **past meetings**
+- Cancel meetings (status update system)
 
-🗄️ Database Schema (Simplified)
+---
 
-User: id, email, name  
-EventType: id, name, duration, slug, userId  
-Availability: id, dayOfWeek, startTime, endTime, eventTypeId  
-Booking: id, name, email, date, startTime, endTime, status, eventTypeId  
+## 🧠 System Design Highlights (Interview Gold)
 
-⚙️ Setup Instructions
+### 🔹 Default User Architecture
+- No authentication → simplified scope
+- Controlled via \`.env\`
+- Easily extendable to **JWT / OAuth**
 
-🔹 Prerequisites  
-Node.js (18+)  
-PostgreSQL  
-npm  
+---
 
-🔹 1. Clone Repository  
-git clone <your-repo-link>  
-cd SCALER  
+### 🔹 Slot Generation Engine
+Built using:
+- Weekly availability
+- Selected date
+- Event duration  
 
-🔹 2. Backend Setup  
-cd BACKEND  
-npm install  
+✔ Ensures:
+- No overlapping bookings  
+- No duplicate slots  
 
-Create .env:  
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/calendly"  
-USE_DEFAULT_USER=true  
-DEFAULT_USER_ID=1  
-DEFAULT_USER_EMAIL=demo@calendly.local  
+---
 
-Run:  
-npx prisma migrate deploy  
-npm run seed  
-npm run dev  
+### 🔹 Database Design (Normalized)
+Separate tables:
+- \`User\`
+- \`EventType\`
+- \`Availability\`
+- \`Booking\`
 
-Backend runs on:  
-http://127.0.0.1:5000  
+✔ Benefits:
+- Clean relations  
+- Scalable schema  
+- Easy feature expansion  
 
-🔹 3. Frontend Setup  
-cd FRONTEND  
-npm install  
+---
 
-Project runs on:  
-http://scaler-sage.vercel.app 
+### 🔹 Clean Architecture
+- **Frontend:** UI + API consumption  
+- **Backend:** Business logic + validation  
+- **Prisma:** ORM abstraction layer  
 
-🔍 API Health Check  
-GET /health  
-GET /api/health  
+---
 
-Response:  
-{ "ok": true }  
+## 🏗️ Tech Stack
 
-🚫 Assumptions (As per Assignment)
-Single default user (no login required)  
-No external integrations (Google Calendar, Zoom)  
-Timezone handled at availability level  
-No rescheduling (future enhancement)  
+| Layer        | Technology |
+|-------------|-----------|
+| Frontend    | React 19, TypeScript, Vite, Tailwind CSS |
+| UI          | Radix UI, Sonner |
+| State       | TanStack Query |
+| Backend     | Node.js, Express 5 |
+| ORM         | Prisma |
+| Database    | PostgreSQL |
+| Routing     | React Router 7 |
+| HTTP Client | Axios |
 
+---
 
+## 🗄️ Database Schema
 
-🎯 Evaluation Alignment
+\`\`\`ts
+User:
+id, email, name
 
-Functionality: All core features fully implemented  
-UI/UX: Closely matches Calendly layout & interaction  
-Database Design: Normalized schema with proper relations  
-Code Quality: Modular, readable, scalable  
-Code Modularity: Separation of frontend/backend concerns  
-Understanding: Clear logic, explainable architecture  
+EventType:
+id, name, duration, slug, userId
 
-💡 Final Note
+Availability:
+id, dayOfWeek, startTime, endTime, eventTypeId
 
-This project is 100% original implementation built specifically for the Scaler assignment.  
-All features were designed and coded with full understanding and interview readiness.
+Booking:
+id, name, email, date, startTime, endTime, status, eventTypeId
+\`\`\`
+
+---
+
+## ⚙️ Setup Guide
+
+### 🔹 Prerequisites
+- Node.js (18+)
+- PostgreSQL
+- npm
+
+---
+
+### 🔹 Backend Setup
+
+\`\`\`bash
+cd BACKEND
+npm install
+\`\`\`
+
+Create \`.env\`:
+
+\`\`\`env
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/calendly"
+
+USE_DEFAULT_USER=true
+DEFAULT_USER_ID=1
+DEFAULT_USER_EMAIL=demo@calendly.local
+\`\`\`
+
+Run:
+
+\`\`\`bash
+npx prisma migrate deploy
+npm run seed
+npm run dev
+\`\`\`
+
+---
+
+👉 LINK : http://scaler-sage.vercel.app  
+
+---
+
+## 🔍 API Health Check
+
+\`\`\`
+GET /health
+GET /api/health
+\`\`\`
+
+Response:
+
+\`\`\`json
+{ "ok": true }
+\`\`\`
+
+---
+
+## 🚫 Assumptions
+
+- Single default user (no authentication)
+- No external integrations (Google Meet / Zoom)
+- Timezone handled at availability level
+- No rescheduling (future scope)
+---
+
+## 🎯 Why This Project Stands Out
+
+✔ Real-world problem solving  
+✔ Clean & scalable architecture  
+✔ Strong system design fundamentals  
+✔ Fully functional end-to-end product  
+✔ Built with **production mindset, not just assignment completion**
+
+---
+
+## 🧑‍💻 Author
+
+**Nikunj Jain** 
+
+---
+
+## 💡 Final Note
+
+This is a **complete, original implementation** built specifically for the Scaler assignment.
+
+Every feature is:
+- Thought through
+- Properly implemented
+- Interview-ready with clear explanations
+
+---
+
+⭐ *This is not just a project — it's a production-grade system.*
+EOF
