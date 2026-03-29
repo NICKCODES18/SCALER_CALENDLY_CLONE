@@ -13,17 +13,18 @@ export function EventFormModal({ event, onSubmit, onClose }: EventFormModalProps
   const [name, setName] = useState(event?.name || '');
   const [duration, setDuration] = useState(event?.duration || 30);
   const [slug, setSlug] = useState(event?.slug || '');
+  const [slugEdited, setSlugEdited] = useState(!!event); // treat existing event slug as user-edited
   const [description, setDescription] = useState(event?.description || '');
 
   useEffect(() => {
-    if (!event && name && !slug) {
+    if (!slugEdited) {
       const autoSlug = name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
       setSlug(autoSlug);
     }
-  }, [name, event, slug]);
+  }, [name, slugEdited]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,7 +102,7 @@ export function EventFormModal({ event, onSubmit, onClose }: EventFormModalProps
               <input
                 type="text"
                 value={slug}
-                onChange={e => setSlug(e.target.value)}
+                onChange={e => { setSlug(e.target.value); setSlugEdited(true); }}
                 placeholder="30min"
                 className="min-h-11 min-w-0 flex-1 px-3 py-2 text-base outline-none"
                 required
