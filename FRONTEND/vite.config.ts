@@ -11,6 +11,7 @@ const apiProxy = {
     // 127.0.0.1 avoids some Windows/IPv6 proxy issues with localhost
     target: 'http://127.0.0.1:5000',
     changeOrigin: true,
+    rewrite: (path: string) => path.replace(/^\/api/, ''),
   },
 } as const
 
